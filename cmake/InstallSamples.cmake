@@ -79,12 +79,22 @@ if(NOT CUDA_SAMPLES_INSTALL_CONFIGURED)
         if(NOT EXISTS "${ROOT_BINARY_DIR}/CMakeCache.txt")
             set(ROOT_BINARY_DIR "${CMAKE_BINARY_DIR}")
         endif()
+        # If user didn't specify CMAKE_INSTALL_PREFIX, default to build/bin
         set(CMAKE_INSTALL_PREFIX "${ROOT_BINARY_DIR}/bin" CACHE PATH "Installation directory" FORCE)
     endif()
 
     # Create the installation path: bin/$(TARGET_ARCH)/$(TARGET_OS)/$(BUILD_TYPE)
     # For multi-config generators, this will be evaluated at install time
-    set(CUDA_SAMPLES_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/${TARGET_ARCH}/${TARGET_OS}/${BUILD_TYPE_EXPR}" CACHE INTERNAL "Install directory for samples")
+    if(NOT DEFINED CUDA_SAMPLES_INSTALL_DIR)
+        set(CUDA_SAMPLES_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/${TARGET_ARCH}/${TARGET_OS}/${BUILD_TYPE_EXPR}" CACHE PATH "Install directory for samples")
+    endif()
+
+    # Check if we should use the default dynamic installation logic
+    if("${CUDA_SAMPLES_INSTALL_DIR}" STREQUAL "${CMAKE_INSTALL_PREFIX}/${TARGET_ARCH}/${TARGET_OS}/${BUILD_TYPE_EXPR}")
+        set(CUDA_SAMPLES_INSTALL_USE_DEFAULT TRUE)
+    else()
+        set(CUDA_SAMPLES_INSTALL_USE_DEFAULT FALSE)
+    endif()
 
     # Print installation configuration
     message(STATUS "CUDA Samples installation configured:")
@@ -102,18 +112,21 @@ endif()
 # Function to setup installation for regular samples
 # This should be called after all targets are defined
 function(setup_samples_install)
-    # Create an install script that will copy executables and specific file types
-    # All files are copied to flat root directory
-    # This script runs at install time, after the build is complete
+    # Create an install script that copies executables, data files, and shared libraries
+    # This script only installs - build must be done separately
     install(CODE "
-        # Determine the actual install directory based on the configuration
-        # CMAKE_INSTALL_CONFIG_NAME is available at install time for multi-config generators
-        if(DEFINED CMAKE_INSTALL_CONFIG_NAME)
-            string(TOLOWER \"\${CMAKE_INSTALL_CONFIG_NAME}\" INSTALL_BUILD_TYPE)
+        if(\"${CUDA_SAMPLES_INSTALL_USE_DEFAULT}\" STREQUAL \"TRUE\")
+            # Determine the actual install directory based on the configuration
+            # CMAKE_INSTALL_CONFIG_NAME is available at install time for multi-config generators
+            if(DEFINED CMAKE_INSTALL_CONFIG_NAME)
+                string(TOLOWER \"\${CMAKE_INSTALL_CONFIG_NAME}\" INSTALL_BUILD_TYPE)
+            else()
+                set(INSTALL_BUILD_TYPE \"${BUILD_TYPE_EXPR}\")
+            endif()
+            set(INSTALL_DIR \"${CMAKE_INSTALL_PREFIX}/${TARGET_ARCH}/${TARGET_OS}/\${INSTALL_BUILD_TYPE}\")
         else()
-            set(INSTALL_BUILD_TYPE \"${BUILD_TYPE_EXPR}\")
+            set(INSTALL_DIR \"${CUDA_SAMPLES_INSTALL_DIR}\")
         endif()
-        set(INSTALL_DIR \"${CMAKE_INSTALL_PREFIX}/${TARGET_ARCH}/${TARGET_OS}/\${INSTALL_BUILD_TYPE}\")
         
         # Search in the current project's binary directory for built executables
         file(GLOB_RECURSE BINARY_FILES 
