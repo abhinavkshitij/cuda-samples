@@ -44,7 +44,7 @@
 #include "helper_multiprocess.h"
 
 // #define DEBUG
-#ifndef DEBUG
+#ifdef NDEBUG
 #define ENABLE_VALIDATION (false)
 #else
 #define ENABLE_VALIDATION (true)

@@ -69,9 +69,9 @@ const int MAX_FRAMES = 4;
 const std::vector<const char *> validationLayers = {"VK_LAYER_KHRONOS_validation"};
 
 #ifdef NDEBUG
-const bool enableValidationLayers = true;
-#else
 const bool enableValidationLayers = false;
+#else
+const bool enableValidationLayers = true;
 #endif
 
 std::string execution_path;

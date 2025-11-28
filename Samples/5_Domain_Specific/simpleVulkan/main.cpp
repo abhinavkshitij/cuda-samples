@@ -38,7 +38,7 @@
 typedef float vec2[2];
 std::string   execution_path;
 
-#ifndef NDEBUG
+#ifdef NDEBUG
 #define ENABLE_VALIDATION (false)
 #else
 #define ENABLE_VALIDATION (true)
