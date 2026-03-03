@@ -664,7 +664,17 @@ int main(int argc, char **argv)
         verboseResults = 1;
     }
 
-    int device_id = findCudaDevice(argc, (const char **)argv);
+    // set device
+    cudaDeviceProp device_prop;
+    int            device_id = findCudaDevice(argc, (const char **)argv);
+    checkCudaErrors(cudaGetDeviceProperties(&device_prop, device_id));
+
+    if (!device_prop.managedMemory) {
+        // This samples requires being run on a device that supports Unified Memory
+        fprintf(stderr, "Unified Memory not supported on this device\n");
+
+        exit(EXIT_WAIVED);
+    }
 
     matrixMultiplyPerfRunner(reportAsBandwidth, print_launch_transfer_results, print_std_deviation, device_id);
 
