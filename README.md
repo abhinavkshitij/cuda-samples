@@ -1,4 +1,4 @@
-# CUDA Samples
+# CUDA Samples [develop]
 
 Samples for CUDA Developers which demonstrates features in CUDA Toolkit. This version supports [CUDA Toolkit 13.2](https://developer.nvidia.com/cuda-downloads).
 
